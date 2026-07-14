@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"
+     viewBox="0 0 1200 630" role="img"
+     aria-labelledby="title description">
+  <title id="title">Python class and instance attribute lookup</title>
+  <desc id="description">
+    A diagram showing instance lookup before class lookup and separate
+    instance and class dictionaries.
+  </desc>
+  <rect width="1200" height="630" fill="#f7f8fa"/>
+  <text x="600" y="72" text-anchor="middle" font-family="Arial, sans-serif"
+        font-size="40" font-weight="700" fill="#17202a">
+    Python Attribute Lookup
+  </text>
+  <text x="600" y="112" text-anchor="middle" font-family="Arial, sans-serif"
+        font-size="22" fill="#4b5563">
+    Instance first, then class
+  </text>
+
+  <rect x="90" y="175" width="430" height="300" rx="12"
+        fill="#ffffff" stroke="#147d92" stroke-width="4"/>
+  <text x="305" y="225" text-anchor="middle" font-family="Arial, sans-serif"
+        font-size="30" font-weight="700" fill="#0f5968">
+    Instance: alice
+  </text>
+  <text x="125" y="280" font-family="Consolas, monospace" font-size="23"
+        fill="#17202a">alice.__dict__</text>
+  <rect x="125" y="305" width="360" height="105" rx="8"
+        fill="#e8f6f8"/>
+  <text x="150" y="350" font-family="Consolas, monospace" font-size="22"
+        fill="#17202a">{'name': 'Alice'}</text>
+  <text x="125" y="445" font-family="Arial, sans-serif" font-size="20"
+        fill="#4b5563">Stores object-specific state</text>
+
+  <rect x="680" y="175" width="430" height="300" rx="12"
+        fill="#ffffff" stroke="#2f855a" stroke-width="4"/>
+  <text x="895" y="225" text-anchor="middle" font-family="Arial, sans-serif"
+        font-size="30" font-weight="700" fill="#276749">
+    Class: Student
+  </text>
+  <text x="715" y="280" font-family="Consolas, monospace" font-size="23"
+        fill="#17202a">Student.__dict__</text>
+  <rect x="715" y="305" width="360" height="105" rx="8"
+        fill="#edf9f1"/>
+  <text x="740" y="350" font-family="Consolas, monospace" font-size="22"
+        fill="#17202a">{'school': 'ALU'}</text>
+  <text x="715" y="445" font-family="Arial, sans-serif" font-size="20"
+        fill="#4b5563">Stores shared defaults</text>
+
+  <path d="M520 330 L665 330" stroke="#374151" stroke-width="5"
+        fill="none"/>
+  <path d="M665 330 L640 315 M665 330 L640 345" stroke="#374151"
+        stroke-width="5" fill="none"/>
+  <text x="592" y="300" text-anchor="middle" font-family="Arial, sans-serif"
+        font-size="19" font-weight="700" fill="#374151">
+    if missing
+  </text>
+
+  <rect x="245" y="525" width="710" height="65" rx="10" fill="#17202a"/>
+  <text x="600" y="567" text-anchor="middle" font-family="Consolas, monospace"
+        font-size="24" fill="#ffffff">
+    alice.school  -&gt; instance lookup  -&gt; class lookup
+  </text>
+</svg>
