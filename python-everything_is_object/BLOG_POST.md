@@ -1,34 +1,42 @@
-# Python: Everything Is an Object
+# Everything Is an Object: What Python Variables Really Hold
 
 ![Python object identity, aliasing, and immutable rebinding](python-objects-cover.png)
 
 ## Introduction
 
-Python becomes much easier to reason about once we stop thinking of variables as boxes that contain values. Everything in Python is an object, and a variable is a name bound to an object. An object has an identity, a type, and a value. Some objects can change after creation, while others cannot. Those few ideas explain why two equal values may or may not be the same object, why changing one list can affect another variable, and why an integer passed to a function behaves differently from a list.
+When I started learning Python, I imagined a variable as a box. If I wrote `score = 10`, I thought Python created a box called `score` and placed the number `10` inside it. That explanation was useful at first, but it stopped making sense when I began working with lists, copies, and functions. Why did changing one list sometimes change another one? Why did the same thing not happen with integers?
 
-## Identity and type
+The answer is one of Python's most important ideas: everything is an object. A variable is not a box containing an object. It is a name that refers to an object. Every object has a type, a value, and an identity. Once I understood that, many results that had seemed strange became predictable.
 
-The built-in `type()` function reports an object's type. The built-in `id()` function returns its identity: an integer that is unique for the object during its lifetime. In CPython, that identity represents the object's memory address, although other Python implementations do not have to use an address. The `==` operator compares values, while `is` compares identities.
+## Identity, type, and the difference between `==` and `is`
+
+Python gives us two useful built-in functions for inspecting objects. `type()` tells us what kind of object we are working with, while `id()` gives us an integer that uniquely identifies that object during its lifetime. In CPython, the value returned by `id()` represents the object's memory address. Other Python implementations are allowed to handle identity differently.
+
+Here is a simple example:
 
 ```python
 a = [1, 2, 3]
 b = [1, 2, 3]
 
-print(type(a))   # <class 'list'>
-print(a == b)    # True: their values are equal
-print(a is b)    # False: they are different objects
-print(id(a) == id(b))  # False
+print(type(a))          # <class 'list'>
+print(a == b)           # True
+print(a is b)           # False
+print(id(a) == id(b))   # False
 ```
 
-Assignment does not copy an object. It binds a name to a reference. Therefore, `b = a` makes `b` an alias of `a`: both names refer to the same object.
+At first, seeing both `True` and `False` here can be confusing. The expression `a == b` asks whether the two lists have the same value. They do. The expression `a is b` asks whether both names point to the exact same object. They do not.
+
+Assignment is also important. Writing `b = a` does not automatically copy the object. It simply makes `b` refer to the same object as `a`. This is the difference between assignment and copying a value.
 
 ```python
 a = [1, 2, 3]
 b = a
+
+print(a == b)  # True
 print(a is b)  # True
 ```
 
-The first memory schema looks like this:
+In memory, the relationship can be pictured like this:
 
 ```text
 a ─────┐
@@ -36,145 +44,225 @@ a ─────┐
 b ─────┘
 ```
 
+The names `a` and `b` are aliases. There is only one list, but there are two ways to reach it.
+
 ## Mutable objects
 
-A mutable object can be changed in place without changing its identity. Common mutable built-in types are `list`, `dict`, `set`, and `bytearray`. When aliases point to one mutable object, a mutation made through either name is visible through both names.
+A mutable object is an object whose contents can change after it has been created. Python's common mutable built-in types include:
+
+- `list`
+- `dict`
+- `set`
+- `bytearray`
+
+Lists make mutability easy to see:
 
 ```python
 scores = [10, 20]
-alias = scores
-before = id(scores)
+other_name = scores
+old_id = id(scores)
 
-alias.append(30)
+other_name.append(30)
 
-print(scores)               # [10, 20, 30]
-print(alias)                # [10, 20, 30]
-print(id(scores) == before) # True
+print(scores)                 # [10, 20, 30]
+print(other_name)             # [10, 20, 30]
+print(id(scores) == old_id)   # True
 ```
 
-The object's contents changed, but the two references and the list's identity stayed the same:
+I only called `append()` through `other_name`, yet `scores` also appears to change. In reality, neither variable contains its own list. Both names refer to one shared list, and that list was changed in place. Its identity stayed the same.
 
 ```text
-Before: scores ─┐
-                ├──> [10, 20]     (identity 0x200)
-        alias ──┘
+Before:
 
-After:  scores ─┐
-                ├──> [10, 20, 30] (identity 0x200)
-        alias ──┘
+scores ──────┐
+             ├────> [10, 20]       identity 0x200
+other_name ──┘
+
+After other_name.append(30):
+
+scores ──────┐
+             ├────> [10, 20, 30]   identity 0x200
+other_name ──┘
 ```
 
-This aliasing mechanism is useful when shared state is intentional, but it can also cause surprising bugs. To make an independent shallow copy of a list, use slicing, `list.copy()`, or `list(original)`.
+This behavior is called aliasing. It can be useful when two parts of a program are intentionally sharing data, but it can also cause bugs when we expect one variable to have an independent copy.
+
+To create a shallow copy of a list, I can use slicing, `copy()`, or the `list()` constructor:
 
 ```python
 original = [1, 2, 3]
-copy = original[:]
-copy.append(4)
+copied = original[:]
 
-print(original)          # [1, 2, 3]
-print(copy)              # [1, 2, 3, 4]
-print(copy is original)  # False
+copied.append(4)
+
+print(original)            # [1, 2, 3]
+print(copied)              # [1, 2, 3, 4]
+print(copied == original)  # False
+print(copied is original)  # False
 ```
+
+Now there are two separate list objects, so changing one does not change the other.
 
 ## Immutable objects
 
-An immutable object's value cannot be changed after creation. The main immutable built-in types are numbers (`int`, `float`, and `complex`), `str`, `tuple`, `frozenset`, and `bytes`. An operation that appears to change an immutable value actually creates or selects another object and rebinds the name.
+An immutable object cannot have its value changed after it is created. Python's main immutable built-in types are:
+
+- numbers: `int`, `float`, and `complex`
+- `str`
+- `tuple`
+- `frozenset`
+- `bytes`
+
+Consider what happens when an integer is incremented:
 
 ```python
 n = 1
-before = id(n)
+old_id = id(n)
 n += 1
 
-print(n)                # 2
-print(id(n) == before)  # False in the usual CPython case
+print(n)               # 2
+print(id(n) == old_id) # False in the usual CPython case
 ```
 
-The second memory schema shows rebinding rather than mutation:
+Python did not change the integer object `1` into `2`. Integers are immutable, so Python made `n` refer to a different integer object. The old object remained unchanged.
 
 ```text
-Before: n ─────> integer object 1 (identity 0x300)
+Before:
+n ─────> integer object 1   identity 0x300
 
-After:  n ─────> integer object 2 (identity 0x320)
-                  integer object 1 is unchanged
+After n += 1:
+n ─────> integer object 2   identity 0x320
+
+The integer object 1 was never modified.
 ```
 
-Immutability describes the outer object, not necessarily everything reachable from it. A tuple cannot have its slots replaced, but a slot may refer to a mutable object whose contents can change.
+Strings behave in the same general way:
 
 ```python
-t = ([1, 2], "fixed")
-t[0].append(3)
-print(t)  # ([1, 2, 3], 'fixed')
+message = "Hello"
+old_id = id(message)
+message += " Python"
+
+print(message)                 # Hello Python
+print(id(message) == old_id)   # False
 ```
 
-A `frozenset` is also immutable, but its elements must be hashable. This prevents ordinary mutable built-ins such as lists, dictionaries, and sets from being direct elements. A custom hashable object may still have mutable internal state, though mutating any state involved in its hash would violate hash-table rules and should be avoided.
+The text looks as if it was extended, but a new string was created and `message` was rebound to it.
 
-## Why mutability matters
+There is an interesting detail with tuples and frozen sets. A tuple is immutable because its references cannot be replaced, but an object stored inside a tuple may itself be mutable.
 
-Mutability determines whether an operation changes an existing object or binds a name to another object. For a list, `+=` normally mutates the list in place, so aliases see the update. By contrast, `a = a + [4]` creates a new list and rebinds only `a`.
+```python
+data = ([1, 2], "unchanged")
+data[0].append(3)
+
+print(data)  # ([1, 2, 3], 'unchanged')
+```
+
+The tuple still points to the same list, so the tuple itself was not changed. The list inside it was changed. A `frozenset` is also immutable, but its elements must be hashable. For that reason, ordinary lists, dictionaries, and sets cannot be direct elements of a `frozenset`. A custom hashable object could still contain mutable internal data, although changing anything used to calculate its hash would be unsafe.
+
+## Why the difference matters
+
+Mutability matters because it decides whether an operation updates an existing object or makes a name refer to a new one. A good example is the difference between `+=` and `+` with lists:
 
 ```python
 a = [1, 2, 3]
 b = a
+
 a += [4]
+
+print(a)       # [1, 2, 3, 4]
 print(b)       # [1, 2, 3, 4]
 print(a is b)  # True
-
-x = [1, 2, 3]
-y = x
-x = x + [4]
-print(y)       # [1, 2, 3]
-print(x is y)  # False
 ```
 
-The same distinction matters when choosing dictionary keys and set elements: those positions require hashable objects whose hash remains stable. Immutable types are often hashable, while mutable containers are not. It also matters when designing APIs, sharing data between parts of a program, caching results, and deciding whether a defensive copy is needed.
+For a list, `+=` normally changes the existing object. Since `a` and `b` are aliases, both names still show the updated list.
 
-CPython further optimizes commonly used immutable integers. At startup it creates a cache containing 262 small integer objects, from `-5` through `256` inclusive. In CPython source these ranges have historically been described by `NSMALLNEGINTS` (5 negative integers) and `NSMALLPOSINTS` (257 non-negative integers). Modern source names may include an internal prefix, but the idea is the same. These values were chosen because small integers are used constantly for indexes, counters, lengths, status values, and Boolean-like calculations. Reusing them saves allocations and improves performance.
+Now compare that with this:
+
+```python
+a = [1, 2, 3]
+b = a
+
+a = a + [4]
+
+print(a)       # [1, 2, 3, 4]
+print(b)       # [1, 2, 3]
+print(a is b)  # False
+```
+
+This time, `a + [4]` created a new list and assignment rebound only `a`. The name `b` continued to refer to the original list.
+
+Mutability also matters when we choose dictionary keys or set elements. Those objects need a stable hash value, which is why mutable containers such as lists and dictionaries cannot be used as dictionary keys. The same idea matters when designing functions, sharing application state, caching data, and deciding whether to make a copy before changing something.
+
+CPython has another interesting object-related optimization: small integer pre-allocation. When CPython starts, it creates 262 commonly used integer objects, covering the range from `-5` to `256` inclusive. These ranges have historically been described in the CPython source using `NSMALLNEGINTS` for the five negative integers and `NSMALLPOSINTS` for the 257 non-negative integers. In newer source code, the names may have an internal prefix.
+
+These particular integers are reused because small numbers appear constantly as indexes, counters, lengths, return values, and status codes. Reusing the objects avoids repeatedly allocating the most common integer values.
 
 ```python
 a = 89
 b = 89
-print(a is b)  # Commonly True in CPython because 89 is cached
+
+print(a == b)  # True
+print(a is b)  # Commonly True in CPython
 ```
 
-Identity reuse is an implementation detail, so `is` must not be used for numeric or string value comparison. Use `==` for values and reserve `is` for identity checks, especially `value is None`.
+This does not mean we should compare numbers using `is`. Integer caching and other identity optimizations are implementation details. I use `==` when comparing values and `is` when I genuinely care about identity, especially in checks such as `value is None`.
 
-## Passing arguments to functions
+## What happens when objects are passed to functions?
 
-Python passes arguments by assignment, sometimes described as call-by-sharing. Calling a function binds each parameter name to the same object referenced by the corresponding argument. The function does not receive a separate variable box, and the reference itself is not passed by reference. If the function mutates a shared mutable object, the caller sees the change. If it rebinds the parameter, the caller's name is unaffected.
+Python passes arguments by assignment, a model that is also called call-by-sharing. When I pass an object to a function, the function's parameter becomes another name for that object.
+
+If the object is mutable and the function changes it in place, the caller can see the change:
 
 ```python
 def add_item(items):
     items.append(4)
 
+
 numbers = [1, 2, 3]
 add_item(numbers)
+
 print(numbers)  # [1, 2, 3, 4]
 ```
 
-Here, `items` and `numbers` are temporary aliases for the same list. The function mutates that list.
+While `add_item()` is running, `items` and `numbers` are aliases for the same list. The function changes that shared object.
+
+However, assigning a different object to the parameter only changes the local name:
 
 ```python
-def replace(items):
+def replace_list(items):
     items = [9, 9, 9]
 
+
 numbers = [1, 2, 3]
-replace(numbers)
+replace_list(numbers)
+
 print(numbers)  # [1, 2, 3]
 ```
 
-Here, assignment only rebinds the local parameter `items`; it does not rebind `numbers`. Immutable arguments make the same rule especially visible:
+The new list is assigned to the local parameter `items`. The caller's name `numbers` is not rebound, so it still points to the original list.
+
+Immutable objects follow exactly the same argument-passing rule:
 
 ```python
 def increment(value):
     value += 1
     print(value)  # 2
 
+
 number = 1
 increment(number)
-print(number)     # 1
+
+print(number)  # 1
 ```
 
-Because an integer cannot be mutated, `value += 1` creates or selects the integer `2` and locally rebinds `value`. The caller's `number` still refers to `1`. Understanding identity, aliases, mutability, rebinding, and argument passing turns these results from Python “tricks” into predictable consequences of one consistent object model.
+Because an integer cannot be modified in place, `value += 1` makes the local name `value` refer to the integer `2`. The name `number` outside the function still refers to `1`.
+
+## Final thoughts
+
+The biggest lesson I took from this project is that Python is consistent once I think in terms of objects and references. Assignment binds a name to an object. Aliases share the same object. Mutable objects can change in place, while operations on immutable objects create or select another object and rebind a name. Function arguments follow those same rules.
+
+Understanding this has made me more careful when copying lists, passing data to functions, comparing objects, and choosing between mutating an object and creating a new one. More importantly, results that once looked like Python tricks now make sense.
 
 ## Publication links
 
