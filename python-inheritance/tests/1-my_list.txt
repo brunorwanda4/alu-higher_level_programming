@@ -1,0 +1,28 @@
+Tests for the ``MyList`` class
+================================
+
+Load the class:
+
+    >>> MyList = __import__("1-my_list").MyList
+
+An empty list prints an empty sorted list:
+
+    >>> values = MyList()
+    >>> values.print_sorted()
+    []
+
+The method prints values in ascending order without changing the list:
+
+    >>> values.extend([1, 4, 2, 3, 5])
+    >>> values.print_sorted()
+    [1, 2, 3, 4, 5]
+    >>> values
+    [1, 4, 2, 3, 5]
+
+Duplicate and negative values are handled normally:
+
+    >>> values = MyList([3, -1, 3, 0])
+    >>> values.print_sorted()
+    [-1, 0, 3, 3]
+    >>> values
+    [3, -1, 3, 0]
