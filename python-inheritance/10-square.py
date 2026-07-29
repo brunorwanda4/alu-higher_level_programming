@@ -1,13 +1,14 @@
 #!/usr/bin/python3
-"""Module 10-square"""
-Rectangle = __import__('9-rectangle').Rectangle
+"""Define a square that inherits from Rectangle."""
+
+Rectangle = __import__("9-rectangle").Rectangle
 
 
 class Square(Rectangle):
-    """Class Square that inherits from Rectangle"""
+    """Represent a square with a positive integer size."""
 
     def __init__(self, size):
-        """Initializes a new Square"""
+        """Initialize a square after validating its size."""
         self.integer_validator("size", size)
         self.__size = size
         super().__init__(size, size)

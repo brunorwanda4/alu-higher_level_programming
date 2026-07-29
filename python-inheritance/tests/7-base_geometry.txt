@@ -1,34 +1,45 @@
-Test cases for the integer_validator method of BaseGeometry class
+Tests for the ``BaseGeometry`` class
+====================================
 
->>> BaseGeometry = __import__('7-base_geometry').BaseGeometry
+Load the class and create an instance:
 
->>> bg = BaseGeometry()
+    >>> BaseGeometry = __import__("7-base_geometry").BaseGeometry
+    >>> geometry = BaseGeometry()
 
->>> bg.integer_validator("my_int", 12)
->>> bg.integer_validator("width", 89)
+The base class does not implement area:
 
->>> bg.integer_validator("name", "John")
-Traceback (most recent call last):
-TypeError: name must be an integer
+    >>> geometry.area()
+    Traceback (most recent call last):
+    ...
+    Exception: area() is not implemented
 
->>> bg.integer_validator("age", 0)
-Traceback (most recent call last):
-ValueError: age must be greater than 0
+Positive integers are valid:
 
->>> bg.integer_validator("distance", -4)
-Traceback (most recent call last):
-ValueError: distance must be greater than 0
+    >>> geometry.integer_validator("width", 1)
+    >>> geometry.integer_validator("height", 100)
 
->>> bg.integer_validator("width", True)
-Traceback (most recent call last):
-TypeError: width must be an integer
+Zero and negative integers are rejected:
 
->>> bg.integer_validator("height", 3.5)
-Traceback (most recent call last):
-TypeError: height must be an integer
+    >>> geometry.integer_validator("width", 0)
+    Traceback (most recent call last):
+    ...
+    ValueError: width must be greater than 0
+    >>> geometry.integer_validator("height", -3)
+    Traceback (most recent call last):
+    ...
+    ValueError: height must be greater than 0
 
->>> try:
-...     bg.area()
-... except Exception as e:
-...     print("[{}] {}".format(e.__class__.__name__, e))
-[Exception] area() is not implemented
+Non-integers, including booleans, are rejected:
+
+    >>> geometry.integer_validator("width", 3.5)
+    Traceback (most recent call last):
+    ...
+    TypeError: width must be an integer
+    >>> geometry.integer_validator("height", "5")
+    Traceback (most recent call last):
+    ...
+    TypeError: height must be an integer
+    >>> geometry.integer_validator("size", True)
+    Traceback (most recent call last):
+    ...
+    TypeError: size must be an integer

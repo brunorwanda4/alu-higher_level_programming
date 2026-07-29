@@ -1,10 +1,10 @@
 #!/usr/bin/python3
-"""Module 6-base_geometry"""
+"""Define a base geometry class with an abstract area operation."""
 
 
 class BaseGeometry:
-    """Class BaseGeometry"""
+    """Represent a geometry whose area is not yet implemented."""
 
     def area(self):
-        """Raises an Exception, area() not implemented"""
+        """Raise an exception because subclasses must implement area."""
         raise Exception("area() is not implemented")
