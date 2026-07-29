@@ -201,5 +201,94 @@ class TestBase_load_from_file(unittest.TestCase):
             Rectangle.load_from_file(1)
 
 
+class TestBase_save_to_file_csv(unittest.TestCase):
+    """Tests Base.save_to_file_csv"""
+
+    def tearDown(self):
+        for name in ("Rectangle.csv", "Square.csv"):
+            if os.path.exists(name):
+                os.remove(name)
+
+    def test_creates_file(self):
+        r1 = Rectangle(10, 7, 2, 8)
+        Rectangle.save_to_file_csv([r1])
+        self.assertTrue(os.path.exists("Rectangle.csv"))
+
+    def test_rectangle_row_format(self):
+        r1 = Rectangle(10, 7, 2, 8, id=1)
+        Rectangle.save_to_file_csv([r1])
+        with open("Rectangle.csv", "r") as f:
+            self.assertEqual(f.read().strip(), "1,10,7,2,8")
+
+    def test_square_row_format(self):
+        s1 = Square(5, 9, 1, id=6)
+        Square.save_to_file_csv([s1])
+        with open("Square.csv", "r") as f:
+            self.assertEqual(f.read().strip(), "6,5,9,1")
+
+    def test_save_none(self):
+        Rectangle.save_to_file_csv(None)
+        with open("Rectangle.csv", "r") as f:
+            self.assertEqual(f.read(), "")
+
+    def test_overwrites_existing_file(self):
+        Rectangle.save_to_file_csv([Rectangle(10, 10, id=1)])
+        Rectangle.save_to_file_csv([Rectangle(2, 2, id=2)])
+        with open("Rectangle.csv", "r") as f:
+            self.assertEqual(f.read().strip(), "2,2,2,0,0")
+
+    def test_too_many_args(self):
+        with self.assertRaises(TypeError):
+            Rectangle.save_to_file_csv([], [])
+
+
+class TestBase_load_from_file_csv(unittest.TestCase):
+    """Tests Base.load_from_file_csv"""
+
+    def tearDown(self):
+        for name in ("Rectangle.csv", "Square.csv"):
+            if os.path.exists(name):
+                os.remove(name)
+
+    def test_no_file_returns_empty_list(self):
+        if os.path.exists("Rectangle.csv"):
+            os.remove("Rectangle.csv")
+        self.assertEqual(Rectangle.load_from_file_csv(), [])
+
+    def test_load_rectangles(self):
+        r1 = Rectangle(10, 7, 2, 8, id=1)
+        r2 = Rectangle(2, 4, id=2)
+        Rectangle.save_to_file_csv([r1, r2])
+        result = Rectangle.load_from_file_csv()
+        self.assertEqual(len(result), 2)
+        self.assertEqual(str(result[0]), str(r1))
+        self.assertEqual(str(result[1]), str(r2))
+
+    def test_load_squares(self):
+        s1 = Square(5, id=5)
+        s2 = Square(7, 9, 1, id=6)
+        Square.save_to_file_csv([s1, s2])
+        result = Square.load_from_file_csv()
+        self.assertEqual(len(result), 2)
+        self.assertEqual(str(result[0]), str(s1))
+        self.assertEqual(str(result[1]), str(s2))
+
+    def test_load_returns_new_instances(self):
+        r1 = Rectangle(10, 10, id=1)
+        Rectangle.save_to_file_csv([r1])
+        result = Rectangle.load_from_file_csv()
+        self.assertIsNot(result[0], r1)
+
+    def test_round_trip_types_are_int(self):
+        Rectangle.save_to_file_csv([Rectangle(10, 7, 2, 8, id=1)])
+        result = Rectangle.load_from_file_csv()
+        self.assertIsInstance(result[0].width, int)
+        self.assertIsInstance(result[0].x, int)
+
+    def test_too_many_args(self):
+        with self.assertRaises(TypeError):
+            Rectangle.load_from_file_csv(1)
+
+
 if __name__ == "__main__":
     unittest.main()
